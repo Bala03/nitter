@@ -1,0 +1,9 @@
+{{template "header" (dict "cfg" .cfg "title" "Error")}}
+<div class="error-page">
+    <div class="error-panel">
+        <h2>Error {{.code}}</h2>
+        <p>{{.message}}</p>
+        <a href="/">Return to homepage</a>
+    </div>
+</div>
+{{template "footer" .}}

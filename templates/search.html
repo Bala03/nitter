@@ -1,0 +1,66 @@
+{{template "header" (dict "cfg" .cfg "title" "Search")}}
+<div class="search-page">
+    <div class="search-bar">
+        <form action="/search" method="get">
+            <input type="text" name="q" value="{{.query}}" placeholder="Search Twitter..." autofocus />
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {{if .query}}
+    {{if .cfg.EnableRSS}}
+    <div class="rss-link-container">
+        <a href="/search/rss?q={{.query}}">📡 RSS Feed for this search</a>
+    </div>
+    {{end}}
+
+    <div class="timeline">
+        {{if .tweets}}
+            {{range .tweets}}
+            <div class="timeline-item">
+                <div class="tweet-header">
+                    <a class="tweet-avatar" href="/{{.User.Username}}">
+                        <img src="{{.User.UserPic}}" alt="{{.User.Username}}" />
+                    </a>
+                    <div class="tweet-name-row">
+                        <a class="fullname" href="/{{.User.Username}}">{{.User.Fullname}}</a>
+                        <a class="username" href="/{{.User.Username}}">@{{.User.Username}}</a>
+                        <span class="tweet-date">
+                            <a href="{{tweetURL .}}">{{timeAgo .Time}}</a>
+                        </span>
+                    </div>
+                </div>
+                <div class="tweet-content media-body">{{.Text}}</div>
+                {{if hasMedia .}}
+                <div class="attachments">
+                    {{range .Photos}}
+                    <div class="gallery-row">
+                        <a class="still-image" href="{{.URL}}">
+                            <img src="{{.URL}}?name=small" alt="Image" />
+                        </a>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+                <div class="tweet-stats">
+                    <span class="tweet-stat">💬 {{formatNumber .Stats.Replies}}</span>
+                    <span class="tweet-stat">♻️ {{formatNumber .Stats.Retweets}}</span>
+                    <span class="tweet-stat">❤️ {{formatNumber .Stats.Likes}}</span>
+                </div>
+            </div>
+            {{end}}
+            {{if .cursor}}
+            <div class="show-more">
+                <a href="/search?q={{.query}}&cursor={{.cursor}}">Load more</a>
+            </div>
+            {{end}}
+        {{else}}
+            <div class="timeline-none">
+                <h2>No results found</h2>
+                <p>This could be due to rate limiting from Twitter's API.</p>
+            </div>
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{template "footer" .}}

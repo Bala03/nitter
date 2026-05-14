@@ -1,0 +1,110 @@
+{{template "header" (dict "cfg" .cfg "title" (printf "@%s" .user.Username))}}
+<div class="profile-tabs">
+    <div class="profile-card">
+        {{if .user.Banner}}
+        <div class="profile-banner">
+            <img src="{{.user.Banner}}/600x200" alt="Banner" />
+        </div>
+        {{end}}
+        <div class="profile-card-info">
+            <a class="profile-card-avatar" href="{{.user.UserPic}}">
+                <img src="{{.user.UserPic}}" alt="Avatar" />
+            </a>
+            <div class="profile-card-fullname">{{.user.Fullname}}
+                {{if .user.Verified}}<span class="verified-icon" title="Verified"></span>{{end}}
+            </div>
+            <div class="profile-card-username">@{{.user.Username}}</div>
+            {{if .user.Bio}}<div class="profile-bio">{{.user.Bio}}</div>{{end}}
+            {{if .user.Location}}<div class="profile-location">📍 {{.user.Location}}</div>{{end}}
+            {{if .user.Website}}<div class="profile-website">🔗 <a href="{{.user.Website}}">{{.user.Website}}</a></div>{{end}}
+            <div class="profile-joindate">📅 Joined {{formatDate .user.JoinDate}}</div>
+            <div class="profile-stats">
+                <span><strong>{{formatNumber .user.Following}}</strong> Following</span>
+                <span><strong>{{formatNumber .user.Followers}}</strong> Followers</span>
+                <span><strong>{{formatNumber .user.Tweets}}</strong> Tweets</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-tab-menu">
+        <a href="/{{.user.Username}}" class="{{if eq .tab "tweets"}}active{{end}}">Tweets</a>
+        <a href="/{{.user.Username}}/with_replies" class="{{if eq .tab "with_replies"}}active{{end}}">Tweets &amp; Replies</a>
+        <a href="/{{.user.Username}}/media" class="{{if eq .tab "media"}}active{{end}}">Media</a>
+        {{if $.cfg.EnableRSS}}<a href="/{{.user.Username}}/rss" class="rss-link" title="RSS Feed">RSS</a>{{end}}
+    </div>
+
+    <div class="timeline">
+        {{if .tweets}}
+            {{range .tweets}}
+            <div class="timeline-item">
+                <div class="tweet-header">
+                    <a class="tweet-avatar" href="/{{.User.Username}}">
+                        <img src="{{.User.UserPic}}" alt="{{.User.Username}}" />
+                    </a>
+                    <div class="tweet-name-row">
+                        <a class="fullname" href="/{{.User.Username}}">{{.User.Fullname}}</a>
+                        <a class="username" href="/{{.User.Username}}">@{{.User.Username}}</a>
+                        <span class="tweet-date">
+                            <a href="{{tweetURL .}}">{{timeAgo .Time}}</a>
+                        </span>
+                    </div>
+                </div>
+                {{if .Reply}}
+                <div class="replying-to">Replying to {{range .Reply}}@{{.}} {{end}}</div>
+                {{end}}
+                <div class="tweet-content media-body">{{.Text}}</div>
+                {{if hasMedia .}}
+                <div class="attachments">
+                    {{range .Photos}}
+                    <div class="gallery-row">
+                        <a class="still-image" href="{{.URL}}">
+                            <img src="{{.URL}}?name=small" alt="Image" />
+                        </a>
+                    </div>
+                    {{end}}
+                    {{if .Video}}
+                    <div class="gallery-video">
+                        <img src="{{.Video.Thumb}}" alt="Video thumbnail" />
+                        <span class="video-overlay">▶</span>
+                    </div>
+                    {{end}}
+                    {{if .Gif}}
+                    <div class="gallery-gif">
+                        <img src="{{.Gif.Thumb}}" alt="GIF" />
+                        <span class="gif-overlay">GIF</span>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+                {{if .Quote}}
+                <div class="quote">
+                    <a class="quote-link" href="{{tweetURL .Quote}}">
+                        <div class="fullname-and-username">
+                            <span class="fullname">{{.Quote.User.Fullname}}</span>
+                            <span class="username">@{{.Quote.User.Username}}</span>
+                        </div>
+                        <div class="quote-text">{{.Quote.Text}}</div>
+                    </a>
+                </div>
+                {{end}}
+                <div class="tweet-stats">
+                    <span class="tweet-stat">💬 {{formatNumber .Stats.Replies}}</span>
+                    <span class="tweet-stat">♻️ {{formatNumber .Stats.Retweets}}</span>
+                    <span class="tweet-stat">❤️ {{formatNumber .Stats.Likes}}</span>
+                </div>
+            </div>
+            {{end}}
+            {{if .cursor}}
+            <div class="show-more">
+                <a href="?cursor={{.cursor}}">Load more</a>
+            </div>
+            {{end}}
+        {{else}}
+            <div class="timeline-none">
+                <h2>No tweets found</h2>
+                <p>This could be due to rate limiting from Twitter's API.</p>
+            </div>
+        {{end}}
+    </div>
+</div>
+{{template "footer" .}}
