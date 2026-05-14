@@ -1,0 +1,55 @@
+{{template "header" (dict "cfg" .cfg "title" "About")}}
+<div class="about-page">
+    <h2>About {{.cfg.Title}}</h2>
+    <p>A free and open source alternative Twitter front-end focused on privacy and performance.</p>
+
+    <h3>Features</h3>
+    <ul>
+        <li>No JavaScript or ads</li>
+        <li>All requests go through the backend, client never talks to Twitter</li>
+        <li>Prevents Twitter from tracking your IP or JavaScript fingerprint</li>
+        <li>Uses Twitter's unofficial API (no rate limits or developer account required)</li>
+        <li>Lightweight pages</li>
+        <li>RSS feeds with <strong>full media information</strong> including:
+            <ul>
+                <li>Image attachments with original quality download links</li>
+                <li>Video attachments with direct MP4 download links (all quality options)</li>
+                <li>GIF attachments with direct download links</li>
+                <li>Sticker information</li>
+                <li>Media dimensions, duration, and bitrate metadata</li>
+                <li>Standard RSS enclosure and media:content elements for podcast/feed reader compatibility</li>
+            </ul>
+        </li>
+        <li>Themes</li>
+        <li>Mobile support (responsive design)</li>
+    </ul>
+
+    <h3>RSS Feeds</h3>
+    <p>RSS feeds are available for user timelines, media tabs, and search results:</p>
+    <ul>
+        <li><code>/username/rss</code> - User's timeline</li>
+        <li><code>/username/media/rss</code> - User's media tweets</li>
+        <li><code>/username/with_replies/rss</code> - User's tweets and replies</li>
+        <li><code>/search/rss?q=query</code> - Search results</li>
+    </ul>
+    <p>Each RSS item includes:</p>
+    <ul>
+        <li>Full tweet text</li>
+        <li>Media type indicators (photo, video, GIF, sticker)</li>
+        <li><strong>Direct download links</strong> for all media attachments</li>
+        <li>Video quality variants (multiple MP4 bitrates)</li>
+        <li>Media dimensions and duration metadata</li>
+        <li>RSS enclosures for feed reader media playback</li>
+        <li>media:content elements with full MRSS metadata</li>
+        <li>Quoted tweet content and media</li>
+        <li>Engagement stats (retweets, likes, replies)</li>
+    </ul>
+
+    <h3>Technology</h3>
+    <p>Built with Go for high performance and low resource usage.</p>
+    <p>Source code: <a href="https://github.com/zedeus/nitter">github.com/zedeus/nitter</a></p>
+
+    <h3>License</h3>
+    <p>AGPLv3 - No proprietary instances permitted.</p>
+</div>
+{{template "footer" .}}

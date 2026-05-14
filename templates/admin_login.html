@@ -1,0 +1,40 @@
+{{template "header" (dict "cfg" .cfg "title" "Admin Login")}}
+<div class="admin-login">
+    <div class="admin-panel">
+        <h2>🔒 Admin Panel</h2>
+        <p>Enter the admin password to manage Twitter sessions.</p>
+
+        {{if .error}}
+        <div class="admin-error">{{.error}}</div>
+        {{end}}
+
+        <form action="/admin/login" method="post" class="admin-form">
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <input type="password" name="password" id="password" placeholder="Enter admin password" required autofocus />
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.admin-login { max-width: 400px; margin: 2rem auto; }
+.admin-panel { background: var(--bg_panel, #1e2d3d); padding: 2rem; border-radius: 8px; }
+.admin-panel h2 { margin-top: 0; color: var(--fg_color, #e8e8e8); }
+.admin-panel p { color: var(--fg_faded, #999); }
+.admin-form .form-group { margin-bottom: 1rem; }
+.admin-form label { display: block; margin-bottom: 0.5rem; color: var(--fg_color, #e8e8e8); font-weight: bold; }
+.admin-form input[type="password"],
+.admin-form input[type="text"] {
+    width: 100%; padding: 0.75rem; border: 1px solid var(--border_grey, #333);
+    border-radius: 4px; background: var(--bg_color, #151f2b); color: var(--fg_color, #e8e8e8);
+    box-sizing: border-box; font-size: 1rem;
+}
+.btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+.btn-primary { background: #1da1f2; color: white; width: 100%; }
+.btn-primary:hover { background: #0d8ddb; }
+.admin-error { background: #ff4444; color: white; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; }
+.admin-success { background: #44bb44; color: white; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; }
+</style>
+{{template "footer" .}}

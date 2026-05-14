@@ -1,0 +1,67 @@
+{{template "header" (dict "cfg" .cfg "title" (printf "Tweet by @%s" .tweet.User.Username))}}
+<div class="conversation">
+    <div class="main-tweet">
+        <div class="tweet-header">
+            <a class="tweet-avatar" href="/{{.tweet.User.Username}}">
+                <img src="{{.tweet.User.UserPic}}" alt="{{.tweet.User.Username}}" />
+            </a>
+            <div class="tweet-name-row">
+                <a class="fullname" href="/{{.tweet.User.Username}}">{{.tweet.User.Fullname}}</a>
+                <a class="username" href="/{{.tweet.User.Username}}">@{{.tweet.User.Username}}</a>
+            </div>
+        </div>
+        {{if .tweet.Reply}}
+        <div class="replying-to">Replying to {{range .tweet.Reply}}@{{.}} {{end}}</div>
+        {{end}}
+        <div class="tweet-content media-body">{{.tweet.Text}}</div>
+        {{if hasMedia .tweet}}
+        <div class="attachments">
+            {{range .tweet.Photos}}
+            <div class="gallery-row">
+                <a class="still-image" href="{{.URL}}">
+                    <img src="{{.URL}}" alt="Image" />
+                </a>
+            </div>
+            {{end}}
+            {{if .tweet.Video}}
+            <div class="gallery-video">
+                <video controls poster="{{.tweet.Video.Thumb}}">
+                    {{range .tweet.Video.Variants}}
+                    {{if eq (string .ContentType) "video/mp4"}}
+                    <source src="{{.URL}}" type="video/mp4" />
+                    {{end}}
+                    {{end}}
+                </video>
+            </div>
+            {{end}}
+            {{if .tweet.Gif}}
+            <div class="gallery-gif">
+                <video autoplay loop muted>
+                    <source src="{{.tweet.Gif.URL}}" type="video/mp4" />
+                </video>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+        {{if .tweet.Quote}}
+        <div class="quote">
+            <a class="quote-link" href="{{tweetURL .tweet.Quote}}">
+                <div class="fullname-and-username">
+                    <span class="fullname">{{.tweet.Quote.User.Fullname}}</span>
+                    <span class="username">@{{.tweet.Quote.User.Username}}</span>
+                </div>
+                <div class="quote-text">{{.tweet.Quote.Text}}</div>
+            </a>
+        </div>
+        {{end}}
+        <div class="tweet-date">
+            {{.tweet.Time.Format "3:04 PM · Jan 2, 2006"}}
+        </div>
+        <div class="tweet-stats">
+            <span class="tweet-stat"><strong>{{formatNumber .tweet.Stats.Retweets}}</strong> Retweets</span>
+            <span class="tweet-stat"><strong>{{formatNumber .tweet.Stats.Quotes}}</strong> Quotes</span>
+            <span class="tweet-stat"><strong>{{formatNumber .tweet.Stats.Likes}}</strong> Likes</span>
+        </div>
+    </div>
+</div>
+{{template "footer" .}}

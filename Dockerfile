@@ -1,25 +1,20 @@
-FROM nimlang/nim:2.0.0-alpine-regular as nim
-LABEL maintainer="setenforce@protonmail.com"
-
-RUN apk --no-cache add libsass-dev pcre
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /src/nitter
-
-COPY nitter.nimble .
-RUN nimble install -y --depsOnly
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
-RUN nimble build -d:danger -d:lto -d:strip \
-    && nimble scss \
-    && nimble md
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o nitter .
 
 FROM alpine:latest
 WORKDIR /src/
-RUN apk --no-cache add pcre ca-certificates
-COPY --from=nim /src/nitter/nitter ./
-COPY --from=nim /src/nitter/nitter.example.conf ./nitter.conf
-COPY --from=nim /src/nitter/public ./public
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /src/nitter/nitter ./
+COPY --from=builder /src/nitter/nitter.example.conf ./nitter.conf
+COPY --from=builder /src/nitter/public ./public
+COPY --from=builder /src/nitter/templates ./templates
 EXPOSE 8080
 RUN adduser -h /src/ -D -s /bin/sh nitter
 USER nitter
-CMD ./nitter
+CMD ["./nitter"]

@@ -1,0 +1,21 @@
+{{template "header" (dict "cfg" .cfg "title" "Settings")}}
+<div class="preferences">
+    <h2>Preferences</h2>
+    <form action="/settings" method="post">
+        <div class="pref-group">
+            <label for="theme">Theme</label>
+            <select name="theme" id="theme">
+                <option value="Nitter" {{if eq .theme "Nitter"}}selected{{end}}>Nitter</option>
+                <option value="Twitter" {{if eq .theme "Twitter"}}selected{{end}}>Twitter</option>
+                <option value="Twitter Dark" {{if eq .theme "Twitter Dark"}}selected{{end}}>Twitter Dark</option>
+                <option value="Black" {{if eq .theme "Black"}}selected{{end}}>Black</option>
+                <option value="Dracula" {{if eq .theme "Dracula"}}selected{{end}}>Dracula</option>
+                <option value="Mastodon" {{if eq .theme "Mastodon"}}selected{{end}}>Mastodon</option>
+            </select>
+        </div>
+        <div class="pref-group">
+            <button type="submit">Save preferences</button>
+        </div>
+    </form>
+</div>
+{{template "footer" .}}

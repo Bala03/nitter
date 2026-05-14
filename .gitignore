@@ -1,13 +1,24 @@
+# Binary
 nitter
-*.html
-*.db
+
+# Config (contains secrets)
+nitter.conf
+session.jsonl
+
+# Redis dump
+dump.rdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test artifacts
 /tests/__pycache__
 /tests/geckodriver.log
 /tests/downloaded_files
 /tests/latest_logs
-/tools/gencss
-/tools/rendermd
-/public/css/style.css
-/public/md/*.html
-nitter.conf
-dump.rdb
+downloaded_files/
+latest_logs/
+.pytest_cache/

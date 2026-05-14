@@ -1,0 +1,26 @@
+{{template "header" (dict "cfg" .cfg "title" "")}}
+<div class="landing-page">
+    <div class="search-bar">
+        <form action="/search" method="get">
+            <input type="text" name="q" placeholder="Search Twitter..." autofocus />
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="landing-info">
+        <h2>Welcome to {{.cfg.Title}}</h2>
+        <p>A free and open source alternative Twitter front-end focused on privacy and performance.</p>
+        <ul>
+            <li>No JavaScript or ads</li>
+            <li>All requests go through the backend, client never talks to Twitter</li>
+            <li>Prevents Twitter from tracking your IP or JavaScript fingerprint</li>
+            <li>Uses Twitter's unofficial API (no rate limits or developer account required)</li>
+            <li>Lightweight pages</li>
+            <li>RSS feeds with full media information and direct download links</li>
+            <li>Themes</li>
+            <li>Mobile support (responsive design)</li>
+        </ul>
+        <p>Enter a Twitter username in the URL (e.g., <code>/jack</code>) or use the search bar above.</p>
+        <p>For RSS feeds, append <code>/rss</code> to any profile URL (e.g., <code>/jack/rss</code>).</p>
+    </div>
+</div>
+{{template "footer" .}}
