@@ -3,6 +3,7 @@ nitter
 
 # Config (contains secrets)
 nitter.conf
+session.jsonl
 
 # Redis dump
 dump.rdb

@@ -27,13 +27,15 @@ type Config struct {
 	RedisPassword string
 
 	// Config
-	HMACKey     string
-	Base64Media bool
-	MinTokens   int
-	EnableRSS   bool
-	EnableDebug bool
-	Proxy       string
-	ProxyAuth   string
+	HMACKey      string
+	Base64Media  bool
+	MinTokens    int
+	EnableRSS    bool
+	EnableDebug  bool
+	Proxy        string
+	ProxyAuth    string
+	AdminPassword string
+	SessionFile   string
 }
 
 func Load(path string) (*Config, error) {
@@ -65,6 +67,8 @@ func Load(path string) (*Config, error) {
 		EnableDebug:   false,
 		Proxy:         "",
 		ProxyAuth:     "",
+		AdminPassword: "",
+		SessionFile:   "session.jsonl",
 	}
 
 	section := ""
@@ -144,6 +148,10 @@ func Load(path string) (*Config, error) {
 				cfg.Proxy = val
 			case "proxyAuth":
 				cfg.ProxyAuth = val
+			case "adminPassword":
+				cfg.AdminPassword = val
+			case "sessionFile":
+				cfg.SessionFile = val
 			}
 		}
 	}

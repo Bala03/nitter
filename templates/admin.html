@@ -1,0 +1,164 @@
+{{template "header" (dict "cfg" .cfg "title" "Admin Panel")}}
+<div class="admin-page">
+    <div class="admin-header">
+        <h2>🔧 Admin Panel — Session Manager</h2>
+        <p>Add Twitter credentials to generate authenticated sessions. Sessions are stored in <code>session.jsonl</code> and used for API requests.</p>
+    </div>
+
+    {{if .error}}
+    <div class="admin-error">{{.error}}</div>
+    {{end}}
+
+    {{if .success}}
+    <div class="admin-success">{{.success}}</div>
+    {{end}}
+
+    <!-- Add new session -->
+    <div class="admin-panel">
+        <h3>➕ Add Twitter Account</h3>
+        <p>Enter Twitter credentials to automatically login and generate a session.</p>
+        <form action="/admin/add-session" method="post" class="admin-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Twitter Username</label>
+                    <input type="text" name="username" id="username" placeholder="@username or email" required />
+                </div>
+                <div class="form-group">
+                    <label for="password">Twitter Password</label>
+                    <input type="password" name="password" id="password" placeholder="Password" required />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">🔑 Login &amp; Generate Session</button>
+        </form>
+        <p class="form-note">
+            <strong>Note:</strong> Credentials are only used for the login request and are <strong>not stored</strong>. 
+            Only the resulting session tokens (auth_token, ct0) are saved to <code>session.jsonl</code>.
+        </p>
+    </div>
+
+    <!-- Active sessions -->
+    <div class="admin-panel">
+        <h3>📋 Sessions ({{.count}})</h3>
+        {{if .sessions}}
+        <div class="session-list">
+            <table class="session-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Last Used</th>
+                        <th>Auth Token</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .sessions}}
+                    <tr class="{{if .Active}}session-active{{else}}session-inactive{{end}}">
+                        <td><strong>@{{.Username}}</strong></td>
+                        <td>
+                            {{if .Error}}
+                                <span class="status-error" title="{{.Error}}">❌ Error</span>
+                            {{else if .Active}}
+                                <span class="status-active">✅ Active</span>
+                            {{else}}
+                                <span class="status-disabled">⏸️ Disabled</span>
+                            {{end}}
+                        </td>
+                        <td>{{formatDate .CreatedAt}}</td>
+                        <td>{{timeAgo .LastUsed}}</td>
+                        <td><code>{{truncate .AuthToken 12}}</code></td>
+                        <td class="session-actions">
+                            <form action="/admin/toggle-session" method="post" class="inline-form">
+                                <input type="hidden" name="username" value="{{.Username}}" />
+                                <button type="submit" class="btn btn-small btn-toggle" title="{{if .Active}}Disable{{else}}Enable{{end}}">
+                                    {{if .Active}}⏸️{{else}}▶️{{end}}
+                                </button>
+                            </form>
+                            <form action="/admin/validate-session" method="post" class="inline-form">
+                                <input type="hidden" name="username" value="{{.Username}}" />
+                                <button type="submit" class="btn btn-small btn-validate" title="Validate session">🔍</button>
+                            </form>
+                            <form action="/admin/remove-session" method="post" class="inline-form" onsubmit="return confirm('Remove session for @{{.Username}}?')">
+                                <input type="hidden" name="username" value="{{.Username}}" />
+                                <button type="submit" class="btn btn-small btn-danger" title="Remove session">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{if .Error}}
+                    <tr class="error-row">
+                        <td colspan="6" class="error-detail">Error: {{.Error}}</td>
+                    </tr>
+                    {{end}}
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{else}}
+        <div class="no-sessions">
+            <p>No sessions configured. Add a Twitter account above to get started.</p>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- Info panel -->
+    <div class="admin-panel admin-info">
+        <h3>ℹ️ How it works</h3>
+        <ul>
+            <li><strong>Login:</strong> Your Twitter username/password is used once to authenticate with Twitter's login flow.</li>
+            <li><strong>Session tokens:</strong> The resulting <code>auth_token</code> and <code>ct0</code> cookies are extracted and saved.</li>
+            <li><strong>Storage:</strong> Sessions are stored in <code>session.jsonl</code> (one JSON object per line).</li>
+            <li><strong>API requests:</strong> When active sessions exist, they are used (round-robin) for Twitter API requests instead of guest tokens.</li>
+            <li><strong>Credentials:</strong> Your password is <strong>never stored</strong> — only the session cookies.</li>
+            <li><strong>Expiry:</strong> Sessions may expire. Use the validate button (🔍) to check, or re-add the account.</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.admin-page { max-width: 900px; margin: 1rem auto; }
+.admin-header { margin-bottom: 1.5rem; }
+.admin-header h2 { margin: 0 0 0.5rem 0; color: var(--fg_color, #e8e8e8); }
+.admin-header p { color: var(--fg_faded, #999); margin: 0; }
+.admin-panel { background: var(--bg_panel, #1e2d3d); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+.admin-panel h3 { margin-top: 0; color: var(--fg_color, #e8e8e8); }
+.admin-error { background: #662222; color: #ff8888; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid #883333; }
+.admin-success { background: #226622; color: #88ff88; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; border: 1px solid #338833; }
+
+.admin-form .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.admin-form .form-group { flex: 1; min-width: 200px; margin-bottom: 1rem; }
+.admin-form label { display: block; margin-bottom: 0.4rem; color: var(--fg_color, #e8e8e8); font-weight: bold; font-size: 0.9rem; }
+.admin-form input[type="text"],
+.admin-form input[type="password"] {
+    width: 100%; padding: 0.6rem 0.8rem; border: 1px solid var(--border_grey, #333);
+    border-radius: 4px; background: var(--bg_color, #151f2b); color: var(--fg_color, #e8e8e8);
+    box-sizing: border-box; font-size: 0.95rem;
+}
+.form-note { font-size: 0.85rem; color: var(--fg_faded, #777); margin-top: 0.5rem; }
+
+.btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: white; }
+.btn-primary { background: #1da1f2; }
+.btn-primary:hover { background: #0d8ddb; }
+.btn-small { padding: 0.3rem 0.5rem; font-size: 0.85rem; background: transparent; border: 1px solid var(--border_grey, #444); }
+.btn-small:hover { background: var(--bg_color, #151f2b); }
+.btn-danger { border-color: #cc4444; }
+.btn-danger:hover { background: #662222; }
+
+.session-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.session-table th { text-align: left; padding: 0.6rem; border-bottom: 2px solid var(--border_grey, #333); color: var(--fg_faded, #999); font-size: 0.8rem; text-transform: uppercase; }
+.session-table td { padding: 0.6rem; border-bottom: 1px solid var(--border_grey, #222); color: var(--fg_color, #e8e8e8); }
+.session-active { }
+.session-inactive td { opacity: 0.6; }
+.session-actions { white-space: nowrap; }
+.inline-form { display: inline-block; margin-right: 0.25rem; }
+.status-active { color: #44bb44; }
+.status-disabled { color: #999; }
+.status-error { color: #ff6666; cursor: help; }
+.error-row td { background: #331111; }
+.error-detail { color: #ff8888; font-size: 0.85rem; padding-top: 0 !important; }
+.no-sessions { text-align: center; color: var(--fg_faded, #777); padding: 2rem; }
+
+.admin-info ul { color: var(--fg_faded, #999); line-height: 1.8; }
+.admin-info code { background: var(--bg_color, #151f2b); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+</style>
+{{template "footer" .}}

@@ -32,8 +32,15 @@ func main() {
 
 	fmt.Printf("Connected to Redis at %s:%d\n", cfg.RedisHost, cfg.RedisPort)
 
+	// Initialize session store
+	sessionStore := twitter.NewSessionStore(cfg.SessionFile)
+	activeSessions := sessionStore.GetActive()
+	fmt.Printf("Loaded %d session(s) from %s (%d active)\n",
+		len(sessionStore.GetAll()), cfg.SessionFile, len(activeSessions))
+
 	// Initialize Twitter client
 	client := twitter.NewClient(cfg.MinTokens, cfg.EnableDebug)
+	client.SetSessionStore(sessionStore)
 	client.InitTokenPool()
 
 	// Set up HTTP handlers
@@ -44,10 +51,16 @@ func main() {
 
 	mux := http.NewServeMux()
 	handler.RegisterRoutes(mux)
+	handler.RegisterAdminRoutes(mux)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Address, cfg.Port)
 	fmt.Printf("Nitter (Go) running on http://%s\n", addr)
 	fmt.Printf("RSS feeds enabled: %v\n", cfg.EnableRSS)
+	if cfg.AdminPassword != "" {
+		fmt.Printf("Admin panel enabled at /admin\n")
+	} else {
+		fmt.Printf("Admin panel disabled (set adminPassword in config to enable)\n")
+	}
 
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("Server error: %v", err)

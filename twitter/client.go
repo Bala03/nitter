@@ -88,12 +88,14 @@ type token struct {
 }
 
 type Client struct {
-	httpClient  *http.Client
-	tokens      []*token
-	mu          sync.Mutex
-	lastFailed  time.Time
-	enableDebug bool
-	minTokens   int
+	httpClient   *http.Client
+	tokens       []*token
+	mu           sync.Mutex
+	lastFailed   time.Time
+	enableDebug  bool
+	minTokens    int
+	sessionStore *SessionStore
+	sessionIdx   int
 }
 
 func NewClient(minTokens int, enableDebug bool) *Client {
@@ -102,6 +104,20 @@ func NewClient(minTokens int, enableDebug bool) *Client {
 		minTokens:   minTokens,
 		enableDebug: enableDebug,
 	}
+}
+
+// SetSessionStore attaches a session store to the client
+func (c *Client) SetSessionStore(store *SessionStore) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sessionStore = store
+}
+
+// GetSessionStore returns the attached session store
+func (c *Client) GetSessionStore() *SessionStore {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.sessionStore
 }
 
 func (c *Client) log(msg string) {
@@ -208,6 +224,12 @@ func (c *Client) releaseToken(t *token) {
 }
 
 func (c *Client) fetch(rawURL string) ([]byte, error) {
+	// Try authenticated session first
+	if data, err := c.fetchWithSession(rawURL); err == nil {
+		return data, nil
+	}
+
+	// Fall back to guest token
 	t, err := c.getToken()
 	if err != nil {
 		return nil, fmt.Errorf("rate limited: %v", err)
@@ -232,6 +254,58 @@ func (c *Client) fetch(rawURL string) ([]byte, error) {
 		return nil, fmt.Errorf("API returned %d: %s", resp.StatusCode, string(body))
 	}
 
+	return io.ReadAll(resp.Body)
+}
+
+// fetchWithSession attempts to fetch using an authenticated session
+func (c *Client) fetchWithSession(rawURL string) ([]byte, error) {
+	c.mu.Lock()
+	store := c.sessionStore
+	c.mu.Unlock()
+
+	if store == nil {
+		return nil, fmt.Errorf("no session store")
+	}
+
+	sessions := store.GetActive()
+	if len(sessions) == 0 {
+		return nil, fmt.Errorf("no active sessions")
+	}
+
+	// Round-robin through sessions
+	c.mu.Lock()
+	idx := c.sessionIdx % len(sessions)
+	c.sessionIdx++
+	c.mu.Unlock()
+
+	session := sessions[idx]
+
+	req, err := http.NewRequest("GET", rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+loginBearerToken)
+	req.Header.Set("x-csrf-token", session.CT0)
+	req.AddCookie(&http.Cookie{Name: "auth_token", Value: session.AuthToken})
+	req.AddCookie(&http.Cookie{Name: "ct0", Value: session.CT0})
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 401 || resp.StatusCode == 403 {
+		store.MarkError(session.Username, fmt.Sprintf("HTTP %d - session may be expired", resp.StatusCode))
+		return nil, fmt.Errorf("session expired for @%s", session.Username)
+	}
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("API returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	store.UpdateLastUsed(session.Username)
 	return io.ReadAll(resp.Body)
 }
 
